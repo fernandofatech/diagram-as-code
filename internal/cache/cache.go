@@ -245,10 +245,20 @@ func ExtractZipFile(filePath string) (string, error) {
 			if strings.HasSuffix(f.Name, "/") {
 				continue
 			}
-			outputFilename := fmt.Sprintf("%s/%s", cacheFilePath, f.Name)
-
-			err := writeFile(outputFilename, f)
+			outputFilename := filepath.Join(cacheFilePath, f.Name)
+			cleanOutputPath, err := filepath.Abs(outputFilename)
 			if err != nil {
+				return "", fmt.Errorf("cannot resolve zip entry path(%s): %v", f.Name, err)
+			}
+			cleanCachePath, err := filepath.Abs(cacheFilePath)
+			if err != nil {
+				return "", fmt.Errorf("cannot resolve cache path(%s): %v", cacheFilePath, err)
+			}
+			if cleanOutputPath != cleanCachePath && !strings.HasPrefix(cleanOutputPath, cleanCachePath+string(os.PathSeparator)) {
+				return "", fmt.Errorf("zip entry escapes cache directory: %s", f.Name)
+			}
+
+			if err := writeFile(outputFilename, f); err != nil {
 				return "", fmt.Errorf("cannot write file(%s): %v", f.Name, err)
 			}
 		}
