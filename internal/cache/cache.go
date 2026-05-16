@@ -263,6 +263,7 @@ func ExtractZipFile(filePath string) (string, error) {
 				return "", fmt.Errorf("zip entry escapes cache directory: %s", f.Name)
 			}
 
+			// codeql[go/zipslip] cleanName rejects absolute and parent-directory entries before this write.
 			if err := writeFile(outputFilename, f); err != nil {
 				return "", fmt.Errorf("cannot write file(%s): %v", f.Name, err)
 			}
