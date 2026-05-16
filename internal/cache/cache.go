@@ -245,7 +245,12 @@ func ExtractZipFile(filePath string) (string, error) {
 			if strings.HasSuffix(f.Name, "/") {
 				continue
 			}
-			outputFilename := filepath.Join(cacheFilePath, f.Name)
+			cleanName := filepath.Clean(f.Name)
+			if filepath.IsAbs(cleanName) || cleanName == ".." || strings.HasPrefix(cleanName, ".."+string(os.PathSeparator)) {
+				return "", fmt.Errorf("zip entry escapes cache directory: %s", f.Name)
+			}
+
+			outputFilename := filepath.Join(cacheFilePath, cleanName)
 			cleanOutputPath, err := filepath.Abs(outputFilename)
 			if err != nil {
 				return "", fmt.Errorf("cannot resolve zip entry path(%s): %v", f.Name, err)
